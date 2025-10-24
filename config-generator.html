@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeRead Bot 配置生成器</title>
+    <title>WeRead Bot 配置生成器 Beta</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://unpkg.com/js-yaml@4.1.0/dist/js-yaml.js"></script>
@@ -23,7 +23,7 @@
                 <div class="flex items-center">
                     <i data-lucide="book-open" class="w-8 h-8 text-indigo-600 mr-3"></i>
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">WeRead Bot 配置生成器</h1>
+                        <h1 class="text-2xl font-bold text-gray-900">WeRead Bot 配置生成器 Beta</h1>
                         <p class="text-sm text-gray-600">轻松生成微信读书机器人配置文件</p>
                     </div>
                 </div>
@@ -124,9 +124,9 @@
                                 <!-- Startup Delay -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">启动延迟（秒）</label>
-                                    <input type="text" id="startupDelay" value="1-10" placeholder="例如: 1-10"
+                                    <input type="text" id="startupDelay" value="60-300" placeholder="例如: 60-300"
                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                    <p class="text-xs text-gray-500 mt-1">支持范围值，如 1-10 表示1到10秒随机</p>
+                                    <p class="text-xs text-gray-500 mt-1">支持范围值，如 60-300 表示60到300秒随机，防止被识别，建议尽量设置大一些</p>
                                 </div>
 
                                 <!-- CURL Configuration -->
@@ -158,18 +158,7 @@
                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                                 </div>
 
-                                <!-- Log Level -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">日志级别</label>
-                                    <select id="logLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                        <option value="DEBUG">DEBUG</option>
-                                        <option value="INFO" selected>INFO</option>
-                                        <option value="WARNING">WARNING</option>
-                                        <option value="ERROR">ERROR</option>
-                                        <option value="CRITICAL">CRITICAL</option>
-                                    </select>
                                 </div>
-                            </div>
                         </div>
 
                         <!-- Step 2: Reading Configuration -->
@@ -193,15 +182,47 @@
                                 <!-- Target Duration -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">目标阅读时长（分钟）</label>
-                                    <input type="text" id="targetDuration" value="60-70" placeholder="例如: 60-70"
+                                    <input type="text" id="targetDuration" value="45-90" placeholder="例如: 45-90"
                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <p class="text-xs text-gray-500 mt-1">建议设置为45-90分钟，过长的阅读不符合人类阅读习惯</p>
                                 </div>
 
                                 <!-- Reading Interval -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">阅读间隔（秒）</label>
-                                    <input type="text" id="readingInterval" value="25-35" placeholder="例如: 25-35"
+                                    <input type="text" id="readingInterval" value="30-48" placeholder="例如: 30-48"
                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+
+                                <!-- CURL Data Priority -->
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">数据优先级设置</h3>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="useCurlDataFirst" checked class="mr-2">
+                                            <span class="text-sm font-medium text-gray-700">优先使用CURL数据</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="fallbackToConfig" checked class="mr-2">
+                                            <span class="text-sm font-medium text-gray-700">CURL数据无效时回退到配置</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Books Configuration -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-lg font-medium text-gray-900">书籍配置</h3>
+                                        <button onclick="addBook()" class="px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                            <i data-lucide="plus" class="w-4 h-4 mr-1 inline"></i>
+                                            添加书籍
+                                        </button>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-4">章节索引优先级：配置的索引值 > CURL提取的值 > 自动计算的索引</p>
+
+                                    <div id="booksContainer" class="space-y-4">
+                                        <!-- Books will be added here dynamically -->
+                                    </div>
                                 </div>
 
                                 <!-- Smart Random Settings -->
@@ -246,25 +267,40 @@
                                     <div class="space-y-4">
                                         <label class="flex items-center">
                                             <input type="checkbox" id="humanSimulationEnabled" checked class="mr-2">
-                                            <span>启用人类行为模拟</span>
+                                            <span class="text-sm font-medium text-gray-700">启用人类行为模拟</span>
                                         </label>
 
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">休息概率</label>
-                                                <input type="range" id="breakProbability" min="0" max="1" step="0.05" value="0.15"
+                                                <input type="range" id="breakProbability" min="0" max="1" step="0.05" value="0.1"
                                                        class="w-full" oninput="updateRangeValue('breakProbability', this.value)">
                                                 <div class="flex justify-between text-xs text-gray-500">
                                                     <span>0%</span>
-                                                    <span id="breakProbabilityValue">15%</span>
+                                                    <span id="breakProbabilityValue">10%</span>
                                                     <span>100%</span>
                                                 </div>
                                             </div>
 
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">休息时长（秒）</label>
-                                                <input type="text" id="breakDuration" value="30-180" placeholder="例如: 30-180"
+                                                <input type="text" id="breakDuration" value="5-20" placeholder="例如: 5-20"
                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                            </div>
+
+                                            <div>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" id="readingSpeedVariation" checked class="mr-2">
+                                                    <span class="text-sm font-medium text-gray-700">阅读速度变化</span>
+                                                </label>
+                                            </div>
+
+                                            <div>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" id="rotateUserAgent" class="mr-2">
+                                                    <span class="text-sm font-medium text-gray-700">User-Agent轮换</span>
+                                                </label>
+                                                <p class="text-xs text-gray-500 mt-1">建议不轮换，使用 curl 自带的 User-Agent</p>
                                             </div>
                                         </div>
                                     </div>
@@ -284,6 +320,18 @@
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">重试次数</label>
                                             <input type="number" id="retryTimes" value="3" min="0"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">重试延迟（秒）</label>
+                                            <input type="text" id="retryDelay" value="5-15" placeholder="例如: 5-15"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">请求频率限制（请求/分钟）</label>
+                                            <input type="number" id="rateLimit" value="10" min="1"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                         </div>
                                     </div>
@@ -343,7 +391,7 @@
                                                     <input type="checkbox" class="channel-checkbox mr-2" data-channel="telegram">
                                                     <span class="font-medium">Telegram</span>
                                                 </label>
-                                            </label>
+                                                <span class="text-xs text-blue-500">全球推送</span>
                                             </div>
                                             <div class="channel-config hidden" data-channel-config="telegram">
                                                 <div class="space-y-3">
@@ -353,6 +401,18 @@
                                                     <input type="text" placeholder="Chat ID"
                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                                            data-channel-input="telegram-chat_id">
+
+                                                    <div class="border-t pt-3">
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">代理设置（可选）</label>
+                                                        <div class="space-y-2">
+                                                            <input type="text" placeholder="HTTP代理（例如：http://proxy_host:port）"
+                                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                   data-channel-input="telegram-proxy_http">
+                                                            <input type="text" placeholder="HTTPS代理（例如：https://proxy_host:port）"
+                                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                   data-channel-input="telegram-proxy_https">
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -379,6 +439,7 @@
                                                     <input type="checkbox" class="channel-checkbox mr-2" data-channel="bark">
                                                     <span class="font-medium">Bark (iOS)</span>
                                                 </label>
+                                                <span class="text-xs text-orange-500">iOS推送</span>
                                             </div>
                                             <div class="channel-config hidden" data-channel-config="bark">
                                                 <div class="space-y-3">
@@ -388,6 +449,9 @@
                                                     <input type="text" placeholder="设备密钥"
                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                                            data-channel-input="bark-device_key">
+                                                    <input type="text" placeholder="通知音效 (可选，默认: default)"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="bark-sound">
                                                 </div>
                                             </div>
                                         </div>
@@ -440,6 +504,164 @@
                                                             <option value="markdown">Markdown</option>
                                                             <option value="text">纯文本</option>
                                                         </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Apprise -->
+                                        <div class="border border-gray-200 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="channel-checkbox mr-2" data-channel="apprise">
+                                                    <span class="font-medium">Apprise</span>
+                                                </label>
+                                                <span class="text-xs text-purple-500">多服务支持</span>
+                                            </div>
+                                            <div class="channel-config hidden" data-channel-config="apprise">
+                                                <div class="space-y-3">
+                                                    <input type="text" placeholder="Apprise通知URL（支持Discord、Slack、Email等）"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="apprise-url">
+                                                    <p class="text-xs text-gray-500">示例：discord://webhook_id/webhook_token 或 mailto://user:pass@domain.com</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 飞书 -->
+                                        <div class="border border-gray-200 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="channel-checkbox mr-2" data-channel="feishu">
+                                                    <span class="font-medium">飞书</span>
+                                                </label>
+                                                <span class="text-xs text-blue-500">办公协同</span>
+                                            </div>
+                                            <div class="channel-config hidden" data-channel-config="feishu">
+                                                <div class="space-y-3">
+                                                    <input type="text" placeholder="飞书机器人Webhook URL"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="feishu-webhook_url">
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">消息类型</label>
+                                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                data-channel-input="feishu-msg_type">
+                                                            <option value="text">纯文本</option>
+                                                            <option value="rich_text">富文本</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 企业微信 -->
+                                        <div class="border border-gray-200 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="channel-checkbox mr-2" data-channel="wework">
+                                                    <span class="font-medium">企业微信</span>
+                                                </label>
+                                                <span class="text-xs text-green-500">企业推送</span>
+                                            </div>
+                                            <div class="channel-config hidden" data-channel-config="wework">
+                                                <div class="space-y-3">
+                                                    <input type="text" placeholder="企业微信机器人Webhook URL"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="wework-webhook_url">
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">消息类型</label>
+                                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                data-channel-input="wework-msg_type">
+                                                            <option value="text">纯文本</option>
+                                                            <option value="markdown">Markdown</option>
+                                                            <option value="news">图文</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 钉钉 -->
+                                        <div class="border border-gray-200 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="channel-checkbox mr-2" data-channel="dingtalk">
+                                                    <span class="font-medium">钉钉</span>
+                                                </label>
+                                                <span class="text-xs text-red-500">办公推送</span>
+                                            </div>
+                                            <div class="channel-config hidden" data-channel-config="dingtalk">
+                                                <div class="space-y-3">
+                                                    <input type="text" placeholder="钉钉机器人Webhook URL"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="dingtalk-webhook_url">
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">消息类型</label>
+                                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                data-channel-input="dingtalk-msg_type">
+                                                            <option value="text">纯文本</option>
+                                                            <option value="markdown">Markdown</option>
+                                                            <option value="link">链接</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ntfy -->
+                                        <div class="border border-gray-200 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="channel-checkbox mr-2" data-channel="ntfy">
+                                                    <span class="font-medium">Ntfy</span>
+                                                </label>
+                                                <span class="text-xs text-orange-500">开源推送</span>
+                                            </div>
+                                            <div class="channel-config hidden" data-channel-config="ntfy">
+                                                <div class="space-y-3">
+                                                    <input type="text" placeholder="Ntfy服务器地址（默认：https://ntfy.sh）"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="ntfy-server">
+                                                    <input type="text" placeholder="主题名称"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="ntfy-topic">
+                                                    <input type="text" placeholder="访问令牌（可选，用于私有主题）"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="ntfy-token">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Gotify -->
+                                        <div class="border border-gray-200 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="channel-checkbox mr-2" data-channel="gotify">
+                                                    <span class="font-medium">Gotify</span>
+                                                </label>
+                                                <span class="text-xs text-indigo-500">自建推送</span>
+                                            </div>
+                                            <div class="channel-config hidden" data-channel-config="gotify">
+                                                <div class="space-y-3">
+                                                    <input type="text" placeholder="Gotify服务器地址"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="gotify-server">
+                                                    <input type="text" placeholder="应用令牌"
+                                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           data-channel-input="gotify-token">
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-1">消息优先级（1-10）</label>
+                                                            <input type="number" placeholder="5" min="1" max="10" value="5"
+                                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                   data-channel-input="gotify-priority">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-1">消息标题（可选）</label>
+                                                            <input type="text" placeholder="WeRead Bot 通知"
+                                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                   data-channel-input="gotify-title">
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -498,9 +720,12 @@
                                                 <option value="0 */2 * * *">每2小时执行一次</option>
                                                 <option value="0 */4 * * *">每4小时执行一次</option>
                                                 <option value="0 */6 * * *">每6小时执行一次</option>
-                                                <option value="30 9,18 * * *">每天9:30和18:30执行</option>
-                                                <option value="0 9 * * *">每天9:00执行</option>
-                                                <option value="0 22 * * *">每天22:00执行</option>
+                                                <option value="30 9 * * *">每天9:30执行</option>
+                                                <option value="0 9,18 * * *">每天9:00和18:00执行</option>
+                                                <option value="30 9,18 * * *">每天9:30和18:30执行（多时间点）</option>
+                                                <option value="0 8,12,18 * * *">每天8:00、12:00、18:00执行</option>
+                                                <option value="0 * * * *">每小时执行</option>
+                                                <option value="0 0 * * *">每天0点执行</option>
                                             </select>
                                         </div>
 
@@ -509,7 +734,14 @@
                                             <select id="timezone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                                 <option value="Asia/Shanghai">Asia/Shanghai</option>
                                                 <option value="Asia/Beijing">Asia/Beijing</option>
+                                                <option value="Asia/Chongqing">Asia/Chongqing</option>
+                                                <option value="Asia/Hong_Kong">Asia/Hong_Kong</option>
+                                                <option value="Asia/Taipei">Asia/Taipei</option>
                                                 <option value="UTC">UTC</option>
+                                                <option value="America/New_York">America/New_York</option>
+                                                <option value="Europe/London">Europe/London</option>
+                                                <option value="Europe/Paris">Europe/Paris</option>
+                                                <option value="Asia/Tokyo">Asia/Tokyo</option>
                                             </select>
                                         </div>
                                     </div>
@@ -518,6 +750,7 @@
                                 <!-- Daemon Configuration -->
                                 <div id="daemonConfig">
                                     <h3 class="text-lg font-medium text-gray-900 mb-4">守护进程配置</h3>
+                                    <p class="text-sm text-gray-600 mb-4">开启此方式后，程序将执行为一个阅读会话后，休眠一段时间再执行下一次，模拟多次长阅读行为</p>
 
                                     <div class="space-y-4">
                                         <div>
@@ -539,6 +772,58 @@
                                                 <input type="number" id="maxDailySessions" value="12" min="1"
                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Logging Configuration -->
+                                <div id="loggingConfig">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">日志配置</h3>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">日志级别</label>
+                                            <select id="logLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                                <option value="DEBUG">DEBUG</option>
+                                                <option value="INFO" selected>INFO</option>
+                                                <option value="WARNING">WARNING</option>
+                                                <option value="ERROR">ERROR</option>
+                                                <option value="CRITICAL">CRITICAL</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">日志格式</label>
+                                            <select id="logFormat" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                                <option value="simple">Simple</option>
+                                                <option value="detailed" selected>Detailed</option>
+                                                <option value="json">JSON</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">日志文件</label>
+                                            <input type="text" id="logFile" value="logs/weread.log" placeholder="例如: logs/weread.log"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">最大文件大小</label>
+                                            <input type="text" id="logMaxSize" value="10MB" placeholder="例如: 10MB"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">备份文件数量</label>
+                                            <input type="number" id="logBackupCount" value="5" min="1"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" id="logConsole" checked class="mr-2">
+                                                <span class="text-sm font-medium text-gray-700">控制台显示日志</span>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -649,12 +934,36 @@ notification:
         // Global variables
         let currentStep = 1;
         let userCount = 0;
+        let bookCount = 0;
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             lucide.createIcons();
             updateConfigPreview();
             initializeEventListeners();
+
+            // Add example book for demonstration
+            if (bookCount === 0) {
+                addBook();
+                // Update with example data
+                const firstBook = document.querySelector('[id^="book-"]');
+                if (firstBook) {
+                    const bookId = firstBook.id.replace('book-', '');
+                    firstBook.querySelector(`[data-book-input="${bookId}-name"]`).value = '明朝那些事';
+                    firstBook.querySelector(`[data-book-input="${bookId}-book_id"]`).value = 'a57325c05c8ed3a57224187';
+
+                    // Update chapter with example data
+                    const firstChapter = firstBook.querySelector('[data-chapter-input*="-chapter_id"]');
+                    if (firstChapter) {
+                        const chapterId = firstChapter.dataset.chapterInput.split('-')[1];
+                        firstChapter.value = 'a87322c014a87ff679a21ea';
+                        const chapterIndexInput = firstBook.querySelector(`[data-chapter-input="${bookId}-${chapterId}-chapter_index"]`);
+                        if (chapterIndexInput) {
+                            chapterIndexInput.value = '4';
+                        }
+                    }
+                }
+            }
         });
 
         // Initialize event listeners
@@ -890,6 +1199,99 @@ notification:
             updateConfigPreview();
         }
 
+        // Book management functionality
+        function addBook() {
+            bookCount++;
+            const container = document.getElementById('booksContainer');
+
+            const bookDiv = document.createElement('div');
+            bookDiv.className = 'border border-gray-200 rounded-lg p-4';
+            bookDiv.id = `book-${bookCount}`;
+
+            bookDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-medium text-gray-900">书籍 ${bookCount}</h4>
+                    <button onclick="removeBook(${bookCount})" class="text-red-600 hover:text-red-700">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">书籍名称</label>
+                        <input type="text" placeholder="例如: 明朝那些事" value="书籍${bookCount}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                               data-book-input="${bookCount}-name" onchange="updateConfigPreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">书籍ID</label>
+                        <input type="text" placeholder="例如: a57325c05c8ed3a57224187"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                               data-book-input="${bookCount}-book_id" onchange="updateConfigPreview()">
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-700">章节配置</label>
+                            <button onclick="addChapter(${bookCount})" class="px-2 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">
+                                <i data-lucide="plus" class="w-3 h-3 mr-1 inline"></i>
+                                添加章节
+                            </button>
+                        </div>
+                        <div id="chapters-container-${bookCount}" class="space-y-2">
+                            <!-- Chapters will be added here -->
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(bookDiv);
+            lucide.createIcons();
+
+            // Add a default chapter
+            addChapter(bookCount);
+            updateConfigPreview();
+        }
+
+        function removeBook(bookId) {
+            const bookElement = document.getElementById(`book-${bookId}`);
+            if (bookElement) {
+                bookElement.remove();
+                updateConfigPreview();
+            }
+        }
+
+        function addChapter(bookId) {
+            const container = document.getElementById(`chapters-container-${bookId}`);
+            const chapterId = Date.now(); // Use timestamp for unique ID
+
+            const chapterDiv = document.createElement('div');
+            chapterDiv.className = 'flex items-center space-x-2 p-2 border border-gray-100 rounded';
+            chapterDiv.id = `chapter-${bookId}-${chapterId}`;
+
+            chapterDiv.innerHTML = `
+                <input type="text" placeholder="章节ID (例如: a87322c014a87ff679a21ea)"
+                       class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                       data-chapter-input="${bookId}-${chapterId}-chapter_id" onchange="updateConfigPreview()">
+                <input type="text" placeholder="章节索引 (可选，例如: 4)"
+                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                       data-chapter-input="${bookId}-${chapterId}-chapter_index" onchange="updateConfigPreview()">
+                <button onclick="removeChapter(${bookId}, ${chapterId})" class="text-red-600 hover:text-red-700">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+
+            container.appendChild(chapterDiv);
+            lucide.createIcons();
+            updateConfigPreview();
+        }
+
+        function removeChapter(bookId, chapterId) {
+            const chapterElement = document.getElementById(`chapter-${bookId}-${chapterId}`);
+            if (chapterElement) {
+                chapterElement.remove();
+                updateConfigPreview();
+            }
+        }
+
         function addUser() {
             userCount++;
             const container = document.getElementById('usersContainer');
@@ -1076,16 +1478,22 @@ notification:
                 reading: {
                     mode: document.getElementById('readingMode').value,
                     target_duration: document.getElementById('targetDuration').value,
-                    reading_interval: document.getElementById('readingInterval').value
+                    reading_interval: document.getElementById('readingInterval').value,
+                    use_curl_data_first: document.getElementById('useCurlDataFirst').checked,
+                    fallback_to_config: document.getElementById('fallbackToConfig').checked
                 },
                 human_simulation: {
                     enabled: document.getElementById('humanSimulationEnabled').checked,
+                    reading_speed_variation: document.getElementById('readingSpeedVariation').checked,
                     break_probability: parseFloat(document.getElementById('breakProbability').value),
-                    break_duration: document.getElementById('breakDuration').value
+                    break_duration: document.getElementById('breakDuration').value,
+                    rotate_user_agent: document.getElementById('rotateUserAgent').checked
                 },
                 network: {
                     timeout: parseInt(document.getElementById('networkTimeout').value),
-                    retry_times: parseInt(document.getElementById('retryTimes').value)
+                    retry_times: parseInt(document.getElementById('retryTimes').value),
+                    retry_delay: document.getElementById('retryDelay').value,
+                    rate_limit: parseInt(document.getElementById('rateLimit').value)
                 },
                 notification: {
                     enabled: document.getElementById('notificationEnabled').checked,
@@ -1110,6 +1518,37 @@ notification:
                     book_switch_cooldown: parseInt(document.getElementById('bookSwitchCooldown').value)
                 };
             }
+
+            // Books configuration
+            config.reading.books = [];
+            document.querySelectorAll('[id^="book-"]').forEach(bookElement => {
+                const bookId = bookElement.id.replace('book-', '');
+                const name = bookElement.querySelector(`[data-book-input="${bookId}-name"]`)?.value;
+                const book_id = bookElement.querySelector(`[data-book-input="${bookId}-book_id"]`)?.value;
+
+                if (name && book_id) {
+                    const book = { name, book_id, chapters: [] };
+
+                    // Get chapters for this book
+                    const chapters = bookElement.querySelectorAll(`[data-chapter-input^="${bookId}-"]`);
+                    chapters.forEach(chapterInput => {
+                        const chapterInfo = chapterInput.dataset.chapterInput.split('-');
+                        const chapterId = chapterInfo[2]; // Extract the actual chapter ID
+                        const chapter_id = chapterInput.value;
+                        const chapter_index = bookElement.querySelector(`[data-chapter-input="${bookId}-${chapterId}-chapter_index"]`)?.value;
+
+                        if (chapter_id) {
+                            const chapter = { chapter_id };
+                            if (chapter_index) {
+                                chapter.chapter_index = parseInt(chapter_index);
+                            }
+                            book.chapters.push(chapter);
+                        }
+                    });
+
+                    config.reading.books.push(book);
+                }
+            });
 
             // Multi-user configuration
             const multiUserEnabled = document.getElementById('multiUserEnabled').checked;
@@ -1141,8 +1580,24 @@ notification:
                 const inputs = document.querySelectorAll(`[data-channel-input^="${channel}-"]`);
                 inputs.forEach(input => {
                     const key = input.dataset.channelInput.replace(`${channel}-`, '');
-                    channelConfig.config[key] = input.value;
+                    if (key.startsWith('proxy_')) {
+                        // Handle proxy configuration
+                        if (!channelConfig.config.proxy) {
+                            channelConfig.config.proxy = {};
+                        }
+                        const proxyType = key.replace('proxy_', '');
+                        channelConfig.config.proxy[proxyType] = input.value;
+                    } else {
+                        channelConfig.config[key] = input.value;
+                    }
                 });
+
+                // Convert numeric values
+                if (channel === 'gotify') {
+                    if (channelConfig.config.priority) {
+                        channelConfig.config.priority = parseInt(channelConfig.config.priority);
+                    }
+                }
 
                 config.notification.channels.push(channelConfig);
             });
@@ -1170,9 +1625,11 @@ notification:
             // Logging configuration
             config.logging = {
                 level: document.getElementById('logLevel').value,
-                format: 'detailed',
-                file: 'logs/weread.log',
-                console: true
+                format: document.getElementById('logFormat').value,
+                file: document.getElementById('logFile').value,
+                max_size: document.getElementById('logMaxSize').value,
+                backup_count: parseInt(document.getElementById('logBackupCount').value),
+                console: document.getElementById('logConsole').checked
             };
 
             // Convert to YAML
@@ -1232,26 +1689,64 @@ notification:
 
         function loadExample() {
             // Load example configuration
-            document.getElementById('appName').value = 'WeReadBot';
             document.getElementById('startupMode').value = 'immediate';
-            document.getElementById('startupDelay').value = '1-10';
+            document.getElementById('startupDelay').value = '60-300';
             document.getElementById('curlFilePath').value = 'curl_command.txt';
             document.getElementById('readingMode').value = 'smart_random';
-            document.getElementById('targetDuration').value = '60-70';
-            document.getElementById('readingInterval').value = '25-35';
+            document.getElementById('targetDuration').value = '45-90';
+            document.getElementById('readingInterval').value = '30-48';
+            document.getElementById('useCurlDataFirst').checked = true;
+            document.getElementById('fallbackToConfig').checked = true;
             document.getElementById('bookContinuity').value = '0.8';
             document.getElementById('chapterContinuity').value = '0.7';
-            document.getElementById('breakProbability').value = '0.15';
-            document.getElementById('breakDuration').value = '30-180';
+            document.getElementById('bookSwitchCooldown').value = '3600';
+            document.getElementById('humanSimulationEnabled').checked = true;
+            document.getElementById('readingSpeedVariation').checked = true;
+            document.getElementById('breakProbability').value = '0.1';
+            document.getElementById('breakDuration').value = '5-20';
+            document.getElementById('rotateUserAgent').checked = false;
             document.getElementById('networkTimeout').value = '30';
             document.getElementById('retryTimes').value = '3';
+            document.getElementById('retryDelay').value = '5-15';
+            document.getElementById('rateLimit').value = '10';
+            document.getElementById('notificationEnabled').checked = true;
+            document.getElementById('includeStatistics').checked = true;
+            document.getElementById('logLevel').value = 'INFO';
+            document.getElementById('logFormat').value = 'detailed';
+            document.getElementById('logFile').value = 'logs/weread.log';
+            document.getElementById('logMaxSize').value = '10MB';
+            document.getElementById('logBackupCount').value = '5';
+            document.getElementById('logConsole').checked = true;
+
+            // Add example book
+            if (bookCount === 0) {
+                addBook();
+                // Update the first book with example data
+                const firstBook = document.querySelector('[id^="book-"]');
+                if (firstBook) {
+                    const bookId = firstBook.id.replace('book-', '');
+                    firstBook.querySelector(`[data-book-input="${bookId}-name"]`).value = '明朝那些事';
+                    firstBook.querySelector(`[data-book-input="${bookId}-book_id"]`).value = 'a57325c05c8ed3a57224187';
+
+                    // Update chapter with example data
+                    const firstChapter = firstBook.querySelector('[data-chapter-input*="-chapter_id"]');
+                    if (firstChapter) {
+                        const chapterId = firstChapter.dataset.chapterInput.split('-')[1];
+                        firstChapter.value = 'a87322c014a87ff679a21ea';
+                        const chapterIndexInput = firstBook.querySelector(`[data-chapter-input="${bookId}-${chapterId}-chapter_index"]`);
+                        if (chapterIndexInput) {
+                            chapterIndexInput.value = '4';
+                        }
+                    }
+                }
+            }
 
             // Update range displays
             updateRangeValue('bookContinuity', '0.8');
             updateRangeValue('chapterContinuity', '0.7');
-            updateRangeValue('breakProbability', '0.15');
+            updateRangeValue('breakProbability', '0.1');
 
-            showToast('success', '示例已加载', '已加载默认配置示例');
+            showToast('success', '示例已加载', '已加载完整示例配置');
             updateConfigPreview();
         }
 
