@@ -106,6 +106,8 @@ jobs:
 
     - name: Run WeRead Bot
       env:
+        # Cookie刷新QL属性，根据不同用户的环境，可能需要设置为True或False来确保cookie刷新正常工作，默认值为false
+        HACK_COOKIE_REFRESH_QL: ${{ secrets.HACK_COOKIE_REFRESH_QL }}
         # 通知相关环境变量
         WEREAD_CURL_STRING: ${{ secrets.WEREAD_CURL_STRING }}
         PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
