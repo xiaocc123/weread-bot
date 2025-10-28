@@ -118,13 +118,24 @@ Fork 完成后，需要在你的仓库中配置必要的环境变量：
 > 3. 优先级和标题可根据需要自定义，留空则使用默认值。
 
 
-
 **代理配置（可选）**
 | Secret 名称 | 说明 |
 |------------|------|
 | `HTTP_PROXY` | HTTP 代理地址 |
 | `HTTPS_PROXY` | HTTPS 代理地址 |
 
+**Hack 配置（可选）**
+| Secret 名称 | 说明 | 默认值 |
+|------------|------|--------|
+| `HACK_COOKIE_REFRESH_QL` | Cookie刷新时ql属性值设置 | `false` |
+
+> **Hack 配置说明：**
+> - `HACK_COOKIE_REFRESH_QL`: 控制Cookie刷新请求中的`ql`参数值
+>   - `false` (默认): 使用`"ql": false`
+>   - `true`: 使用`"ql": true`
+> - 根据不同用户的环境，可能需要设置为True或False来确保cookie刷新正常工作
+> - 如果遇到cookie刷新失败的问题，可以尝试切换此配置的值
+> - 建议先使用默认值，如果出现cookie相关错误再尝试修改
 
 ### 步骤 3: 启用 GitHub Actions
 
@@ -234,6 +245,21 @@ A: 是的，GitHub 免费账户每月有 2000 分钟的 Actions 使用时间。�
 ### Q: 如何设置定时运行？
 
 A: 取消 workflow 文件中 schedule 部分的注释，并根据需要调整 cron 表达式。注意时间为 UTC 时间。
+
+### Q: 遇到 Cookie 刷新失败怎么办？
+
+A: 这可能是 `cookie_refresh_ql` 配置问题：
+1. 在仓库 Settings → Secrets 中添加 `HACK_COOKIE_REFRESH_QL`
+2. 如果当前设置为 `false`，尝试设置为 `true`
+3. 如果当前设置为 `true`，尝试设置为 `false`
+4. 重新运行 Action 测试
+
+### Q: 如何判断是否需要调整 Hack 配置？
+
+A: 查看运行日志中的错误信息：
+- 搜索关键词：`cookie`、`refresh`、`ql`、`认证`
+- 如果看到 Cookie 相关错误，尝试调整 `HACK_COOKIE_REFRESH_QL` 配置
+- 如果看到 401/403 认证错误，也可能是此配置问题
 
 ## 🔒 安全提示
 
