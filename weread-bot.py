@@ -527,7 +527,7 @@ class ConfigManager:
         config.hack = HackConfig(
             cookie_refresh_ql=self._get_bool_config(
                 config_data, "hack.cookie_refresh_ql",
-                "HACK_COOKIE_REFRESH_QL", true
+                "HACK_COOKIE_REFRESH_QL", True
             ),
         )
 
