@@ -6,9 +6,43 @@
 [![Python](https://img.shields.io/badge/python-3.9+-blue?style=flat-square)](https://www.python.org/)
 [![GitHub license](https://img.shields.io/github/license/funnyzak/weread-bot?style=flat-square)](https://github.com/funnyzak/weread-bot/blob/main/LICENSE)
 
-WeRead Bot 是一个易用的微信读书自动阅读机器人，通过模拟真实用户阅读行为来积累阅读时长，支持多用户多种运行模式（立即执行、定时任务、守护进程），适用于需要提升微信读书等级或完成阅读任务的用户场景。
+WeRead Bot 是一个易用的微信读书自动阅读机器人，通过模拟真实用户阅读行为来积累阅读时长，支持多用户、多种运行模式（立即执行、定时任务、守护进程）、执行历史和多平台通知，适用于需要提升微信读书等级或完成阅读任务的用户场景。
 
-💗 感谢 [findmover/wxread](https://github.com/findmover/wxread) 提供思路和部分代码支持。
+感谢 [findmover/wxread](https://github.com/findmover/wxread) 提供思路和部分代码支持。
+
+## 适合哪些用户
+
+- 想在本地先快速跑通一个账号的个人用户
+- 想用 `config.yaml` 管理参数、通知和定时任务的用户
+- 需要同时维护多个微信读书账号的用户
+- 想通过 Docker 或 GitHub Actions 长期自动执行的用户
+- 希望在运行前先做只读诊断、运行后保留执行历史的用户
+
+## 快速选择
+
+| 你的场景 | 推荐入口 |
+|--------|----------|
+| 先跑通单账号 | [快速开始](#快速开始) |
+| 需要最小化配置说明 | [配置说明](#配置说明) |
+| 需要多个账号 | [多用户配置](#多用户配置) |
+| 想用 GitHub Actions | [方式四：GitHub Actions 云端运行](#方式四github-actions-云端运行) |
+| 想用 Docker | [方式六：Docker 方式运行](#方式六docker-方式运行) |
+| 想先排错 | [方式五：不同运行模式](#方式五不同运行模式) |
+| 想深入了解抓包和高级能力 | [抓包配置详解](#抓包配置详解) / [高级功能](#高级功能) |
+
+## 首次使用建议
+
+- 先准备一份可用的微信读书 cURL 请求，再开始配置
+- 初次运行建议先执行 `--validate-config` 和 `--dry-run`
+- 如果你的系统没有 `python` 命令，请把文档中的 `python` 替换为 `python3`
+
+建议第一次执行时使用以下顺序：
+
+```bash
+python weread-bot.py --validate-config --config config.yaml
+python weread-bot.py --dry-run --config config.yaml
+python weread-bot.py --show-last-run --config config.yaml
+```
 
 ## 核心功能
 
@@ -509,7 +543,7 @@ notification:
 
 ## 运行模式详解
 
-### 1. 立即执行模式 (immediate)
+### 立即执行模式（immediate）
 ```bash
 python weread-bot.py
 # 或
@@ -519,7 +553,7 @@ python weread-bot.py --mode immediate
 - 完成目标时长后自动退出
 - 适合单次使用或手动控制
 
-### 2. 定时执行模式 (scheduled)
+### 定时执行模式（scheduled）
 ```bash
 python weread-bot.py --mode scheduled
 ```
@@ -538,7 +572,7 @@ schedule:
 - `"30 9,18 * * *"` - 每天9:30和18:30执行（多时间点）
 - `"0 8,12,18 * * *"` - 每天8:00、12:00、18:00执行
 
-### 3. 守护进程模式 (daemon)
+### 守护进程模式（daemon）
 
 ```bash
 python weread-bot.py --mode daemon
@@ -557,7 +591,7 @@ daemon:
 - 自动处理跨天重置
 - 支持优雅关闭（Ctrl+C）
 
-### 4. 最近执行结果查询
+### 最近执行结果查询
 
 ```bash
 python weread-bot.py --show-last-run --config config.yaml
@@ -569,7 +603,7 @@ python weread-bot.py --show-last-run --config config.yaml
 
 ## 阅读模式详解
 
-### 1. 智能随机模式 (smart_random)
+### 智能随机模式（smart_random）
 
 ```yaml
 reading:
@@ -585,7 +619,7 @@ reading:
 - 偶尔随机跳转到其他书籍或章节
 - 有换书冷却机制，避免频繁切换
 
-### 2. 顺序阅读模式 (sequential)
+### 顺序阅读模式（sequential）
 
 ```yaml
 reading:
@@ -596,7 +630,7 @@ reading:
 - 读完一本书后自动切换到下一本
 - 最符合正常阅读逻辑
 
-### 3. 纯随机模式 (pure_random)
+### 纯随机模式（pure_random）
 
 ```yaml
 reading:
@@ -785,7 +819,7 @@ docker-compose logs -f
 
 ## 高级功能
 
-### 1. 多用户会话管理
+### 多用户会话管理
 
 ```yaml
 # 多用户配置结构
@@ -822,7 +856,7 @@ curl_config:
 2. **全局配置** (`reading` / `hack.cookie_refresh_ql`) - 默认配置
 3. **程序默认值** - 最低优先级
 
-### 2. 智能书籍管理
+### 智能书籍管理
 
 ```yaml
 reading:
@@ -888,7 +922,7 @@ reading:
 1. 在微信读书网页版翻页时，查看Network请求中的 `ci` 字段值
 2. 不同章节的 `ci` 值通常是连续递增的数字
 
-### 3. 高级网络配置
+### 高级网络配置
 
 ```yaml
 network:
@@ -898,7 +932,7 @@ network:
   rate_limit: 10                 # 频率限制（请求/分钟）
 ```
 
-### 4. 多平台通知支持
+### 多平台通知支持
 
 ```yaml
 notification:
@@ -1128,7 +1162,7 @@ reading:
 
 ## 性能优化建议
 
-### 1. 网络优化
+### 网络优化
 ```yaml
 network:
   timeout: 30              # 根据网络情况调整
@@ -1137,7 +1171,7 @@ network:
   rate_limit: 8            # 降低请求频率更安全
 ```
 
-### 2. 行为优化
+### 行为优化
 ```yaml
 human_simulation:
   break_probability: 0.2   # 提高休息频率
@@ -1145,7 +1179,7 @@ human_simulation:
   reading_speed_variation: true
 ```
 
-### 3. 时长策略
+### 时长策略
 ```yaml
 reading:
   target_duration: "60-90"   # 较短时长更安全
@@ -1154,6 +1188,7 @@ reading:
 
 ## 项目文档
 
+- [文档总览](docs/README.md)
 - [GitHub Actions 自动阅读配置指南](docs/github-action-autoread-guide.md)
 
 ## 安全建议
