@@ -98,6 +98,15 @@ notification:
   enabled: true
   # 是否包含详细统计
   include_statistics: true
+  # 通知触发策略（可按需关闭特定事件）
+  triggers:
+    session_success: true        # 会话成功摘要
+    session_failure: true        # 会话失败/异常
+    multi_user_summary: true     # 多用户总结
+    runtime_error: true          # 程序级错误
+    general: true                # 其它通用通知
+  # 语法糖：仅失败时通知（等价于将 session_success 和 multi_user_summary 设为 false）
+  only_on_failure: false
   
   # 通知通道配置（支持多个通道同时使用）
   channels:
@@ -254,3 +263,14 @@ logging:
   backup_count: 5
   # 是否在控制台显示
   console: true
+
+# 执行历史配置
+history:
+  # 是否启用最近执行记录持久化
+  enabled: true
+  # 历史文件路径
+  file: "logs/run-history.json"
+  # 最多保留最近多少条执行记录
+  max_entries: 50
+  # 真实执行过程中发生运行时异常时，是否落一条失败历史
+  persist_runtime_error: true

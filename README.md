@@ -109,6 +109,7 @@ python weread-bot.py --config multiuser-config.yaml
 ```
 
 > **详细配置指南**: [GitHub Actions 自动阅读配置指南](https://github.com/funnyzak/weread-bot/blob/main/docs/github-action-autoread-guide.md)
+> 工作流默认会把 `logs/weread.log` 和 `logs/run-history.json` 作为 artifact 上传，便于回看最近执行记录。
 
 ### 方式五：不同运行模式
 
@@ -124,7 +125,25 @@ python weread-bot.py --mode daemon
 
 # 详细日志输出
 python weread-bot.py --verbose
+
+# 仅校验配置与CURL
+python weread-bot.py --validate-config --config config.yaml
+
+# 输出运行诊断信息，不发起阅读请求
+python weread-bot.py --dry-run --config config.yaml
+
+# 查看最近一次真实执行结果
+python weread-bot.py --show-last-run --config config.yaml
 ```
+
+说明：
+
+- `--validate-config` 会输出用户数量、用户级 `CURL` 来源、时间策略覆盖情况和全局/用户配置差异摘要。
+- `--dry-run` 会在 `--validate-config` 的基础上继续输出通知触发配置、通道就绪状态、缺失字段和禁用通道摘要，但不会真正发起阅读请求。
+- `--show-last-run` 只读取 `history.file` 指向的本地历史文件，输出最近一次真实执行摘要后退出，不会初始化阅读会话。
+- 真实执行结束后，如 `history.enabled=true`，程序会把最近执行摘要写入默认文件 `logs/run-history.json`。
+- 历史记录只保存时间、状态、用户数、阅读统计和失败分类等摘要，不会保存 Cookie、请求头或原始 CURL。
+- 如果 `curl_config.users[].reading_overrides` 中存在不支持的键，程序会直接提示对应配置路径。
 
 ### 方式六：Docker 方式运行
 
@@ -189,6 +208,16 @@ open config-generator.html
 | CURL文件 | `curl_config.users[].file_path` | 用户专属的CURL文件路径 |
 | 个性化配置 | `curl_config.users[].reading_overrides` | 用户特定的阅读参数覆盖 |
 
+`curl_config.users[].reading_overrides` 当前支持的键：
+
+- `mode`
+- `target_duration`
+- `reading_interval`
+- `use_curl_data_first`
+- `fallback_to_config`
+
+如果填写了其他键，`--validate-config` 和 `--dry-run` 会直接报出具体配置路径。
+
 
 ### 应用配置
 
@@ -251,6 +280,33 @@ hack:
   cookie_refresh_ql: false  # 或 true，根据您的环境测试确定
 ```
 
+### 执行历史配置
+
+程序默认会把最近真实执行结果写入本地 JSON 文件，便于排查最近一次任务状态和失败类型。
+
+| 配置项 | 环境变量 | 默认值 | 说明 |
+|--------|----------|--------|------|
+| 历史开关 | `HISTORY_ENABLED` | `true` | 是否启用执行历史持久化 |
+| 历史文件 | `HISTORY_FILE` | `logs/run-history.json` | 历史记录输出路径 |
+| 保留条数 | `HISTORY_MAX_ENTRIES` | `50` | 仅保留最近 N 条真实执行记录 |
+| 异常落盘 | `HISTORY_PERSIST_RUNTIME_ERROR` | `true` | 真实执行运行时异常时是否追加失败记录 |
+
+示例：
+
+```yaml
+history:
+  enabled: true
+  file: "logs/run-history.json"
+  max_entries: 50
+  persist_runtime_error: true
+```
+
+说明：
+
+- `--validate-config` 与 `--dry-run` 不会写入历史，避免污染真实执行结果。
+- 历史文件内容损坏时，程序会记录警告并回退为空历史，不会阻断主流程。
+- 历史记录不会保存敏感请求数据，例如 Cookie、请求头和原始 CURL。
+
 ### 使用建议
 
 - **并发控制**：`MAX_CONCURRENT_USERS` 建议从 1 开始，根据机器性能和账号风险逐步提升；并发越高，对网络和请求频控要求越严格。
@@ -264,8 +320,24 @@ hack:
 |--------|----------|--------|------|
 | 通知开关 | `NOTIFICATION_ENABLED` | `true` | 是否启用通知 |
 | 包含统计 | `INCLUDE_STATISTICS` | `true` | 是否包含详细统计 |
+| 仅失败通知 | `NOTIFICATION_ONLY_ON_FAILURE` | `false` | 启用后仅在失败或异常时推送 |
 
 **注意：通知配置采用多通道模式，支持同时启用多个通知服务**
+
+**触发策略示例：**
+
+```yaml
+notification:
+  triggers:
+    session_success: true
+    session_failure: true
+    multi_user_summary: true
+    runtime_error: true
+    general: true
+  only_on_failure: false
+```
+
+将 `only_on_failure` 设为 `true` 即等价于关闭 `session_success` 和 `multi_user_summary`，从而在单用户、多用户场景下都实现“仅失败通知”。如需更细粒度的控制，可单独调整 `triggers` 中的对应事件。
 
 | 通知服务 | 配置参数 | 环境变量 | 说明 |
 |---------|---------|----------|------|
@@ -461,6 +533,16 @@ daemon:
 - 支持每日会话次数限制
 - 自动处理跨天重置
 - 支持优雅关闭（Ctrl+C）
+
+### 4. 最近执行结果查询
+
+```bash
+python weread-bot.py --show-last-run --config config.yaml
+```
+
+- 仅读取 `history.file` 指向的历史文件
+- 没有历史记录时会输出明确提示
+- 适合快速确认最近一次真实执行的状态、用户统计和失败分类
 
 ## 阅读模式详解
 
@@ -708,7 +790,7 @@ curl_config:
 - **可控并发**：通过 `MAX_CONCURRENT_USERS` 控制同时在线的账号数量，默认1表示顺序执行
 - **独立配置**：每个用户可以有不同的阅读策略和时长
 - **错误隔离**：单个用户失败不影响其他用户执行
-- **统计汇总**：提供单用户和多用户的详细统计报告
+- **统计汇总**：提供单用户和多用户的详细统计报告，包含成功、失败、跳过和失败分类汇总
 
 **配置覆盖优先级：**
 
@@ -1042,6 +1124,10 @@ reading:
   target_duration: "60-90"   # 较短时长更安全
   reading_interval: "30-45"  # 增加请求间隔
 ```
+
+## 项目文档
+
+- [GitHub Actions 自动阅读配置指南](docs/github-action-autoread-guide.md)
 
 ## 安全建议
 
